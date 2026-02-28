@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قطعتي - إدارة محل قطع غيار</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🔧</div>
+      <div>
+        <div class="logo-text">قطعتي</div>
+        <div class="logo-sub">نظام البيع والمخزون</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span>لوحة التحكم</div>
+      <div class="nav-item" onclick="showSection('sell')"><span class="nav-icon">🛒</span>بيع سريع</div>
+      <div class="nav-item" onclick="showSection('inventory')"><span class="nav-icon">📦</span>المخزون</div>
+      <div class="nav-item" onclick="showSection('orders')"><span class="nav-icon">🧾</span>سجل المبيعات</div>
+      <div class="nav-item" onclick="showSection('suppliers')"><span class="nav-icon">🚛</span>الموردون</div>
+    </div>
+    <div class="sidebar-footer">💾 البيانات محفوظة على جهازك</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
+      </div>
+      <span style="color:var(--text2);font-size:13px" id="todayDate"></span>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="section active" id="section-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card" style="--card-color:#f97316">
+          <div class="stat-label">📦 أصناف المخزون</div>
+          <div class="stat-val" id="stat-items">0</div>
+          <div class="stat-sub">صنف</div>
+          <div class="stat-icon">📦</div>
+        </div>
+        <div class="stat-card" style="--card-color:#3fb950">
+          <div class="stat-label">🧾 مبيعات اليوم</div>
+          <div class="stat-val" id="stat-orders">0</div>
+          <div class="stat-sub">عملية</div>
+          <div class="stat-icon">🧾</div>
+        </div>
+        <div class="stat-card" style="--card-color:#d29922">
+          <div class="stat-label">💰 إيرادات اليوم</div>
+          <div class="stat-val" id="stat-revenue">0</div>
+          <div class="stat-sub">دج</div>
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-card" style="--card-color:#58a6ff">
+          <div class="stat-label">📈 إيرادات الشهر</div>
+          <div class="stat-val" id="stat-month">0</div>
+          <div class="stat-sub">دج</div>
+          <div class="stat-icon">📈</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">⚠️ قطع على وشك النفاد</span></div>
+          <table>
+            <thead><tr><th>القطعة</th><th>الكمية</th><th>الحالة</th></tr></thead>
+            <tbody id="low-stock-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">🕐 آخر المبيعات</span></div>
+          <table>
+            <thead><tr><th>القطع</th><th>المبلغ</th><th>الدفع</th></tr></thead>
+            <tbody id="recent-orders-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELL -->
+    <div class="section" id="section-sell">
+      <div class="sell-layout">
+        <div>
+          <input class="form-control" style="margin-bottom:14px" type="text" id="sellSearch" placeholder="🔍 ابحث عن قطعة بالاسم أو الكود..." oninput="renderParts()">
+          <div class="parts-grid" id="parts-grid"></div>
+        </div>
+        <div class="cart-panel">
+          <div class="cart-title">
+            🛒 السلة
+            <button class="btn btn-sm btn-danger" onclick="clearCart()">🗑️ مسح</button>
+          </div>
+          <div class="cart-items" id="cart-items">
+            <div class="cart-empty">اضغط على قطعة لإضافتها ☝️</div>
+          </div>
+          <hr class="cart-divider">
+          <div class="total-row"><span>عدد القطع</span><span id="cart-count">0</span></div>
+          <div class="total-row"><span>المجموع</span><span class="total-big" id="cart-total">0 دج</span></div>
+          <div class="pay-row">
+            <div class="pay-opt active" id="pay-cash" onclick="setPay('نقدي')">💵 نقدي</div>
+            <div class="pay-opt" id="pay-bank" onclick="setPay('بنك')">🏦 بنك</div>
+            <div class="pay-opt" id="pay-debt" onclick="setPay('دين')">📋 دين</div>
+          </div>
+          <input class="form-control" id="cart-note" placeholder="ملاحظة اختيارية..." style="font-size:13px;margin-bottom:12px">
+          <button class="btn btn-green" style="width:100%;font-size:15px;padding:13px" onclick="confirmSale()">✅ تأكيد البيع</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="section" id="section-inventory">
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <input class="form-control" style="flex:1;min-width:180px" type="text" placeholder="🔍 ابحث في المخزون..." id="inventorySearch" oninput="renderInventory()">
+        <button class="btn" onclick="openInvModal()">+ إضافة قطعة</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>الكود</th><th>اسم القطعة</th><th>الفئة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجراءات</th></tr></thead>
+          <tbody id="inventory-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS / SALES LOG -->
+    <div class="section" id="section-orders">
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <input class="form-control" style="flex:1;min-width:180px" type="text" placeholder="🔍 ابحث..." id="orderSearch" oninput="renderOrders()">
+        <select class="form-control" style="width:auto" id="orderFilter" onchange="renderOrders()">
+          <option value="">كل الأيام</option>
+          <option value="today">اليوم</option>
+          <option value="week">هذا الأسبوع</option>
+          <option value="month">هذا الشهر</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>#</th><th>القطع المباعة</th><th>المجموع</th><th>الدفع</th><th>التاريخ</th><th>الوقت</th><th>إجراء</th></tr></thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUPPLIERS -->
+    <div class="section" id="section-suppliers">
+      <div style="display:flex;gap:10px;margin-bottom:18px">
+        <input class="form-control" style="flex:1" type="text" placeholder="🔍 ابحث عن مورد..." id="supplierSearch" oninput="renderSuppliers()">
+        <button class="btn" onclick="openSupModal()">+ إضافة مورد</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>#</th><th>اسم المورد</th><th>الهاتف</th><th>التخصص</th><th>إجراءات</th></tr></thead>
+          <tbody id="suppliers-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- INVENTORY MODAL -->
+<div class="modal-overlay" id="invModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📦 بيانات القطعة</span>
+      <button class="modal-close" onclick="closeModal('invModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="inv-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">كود القطعة *</label><input class="form-control" id="inv-code" placeholder="OIL-F-206"></div>
+        <div class="form-group"><label class="form-label">اسم القطعة *</label><input class="form-control" id="inv-name" placeholder="فلتر الزيت بيجو 206"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">الفئة</label>
+          <select class="form-control" id="inv-cat">
+            <option>فلاتر</option><option>فرامل</option><option>محرك</option><option>كهرباء</option>
+            <option>علبة السرعة</option><option>تعليق</option><option>هيكل</option><option>إطارات</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">الكمية</label><input class="form-control" id="inv-qty" type="number" value="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">سعر الشراء (دج)</label><input class="form-control" id="inv-buy" type="number" value="0" min="0"></div>
+        <div class="form-group"><label class="form-label">سعر البيع (دج)</label><input class="form-control" id="inv-sell" type="number" value="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">حد تنبيه النفاد</label><input class="form-control" id="inv-alert" type="number" value="3" min="0"></div>
+        <div class="form-group"><label class="form-label">تناسب سيارات</label><input class="form-control" id="inv-cars" placeholder="بيجو، سيتروان..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('invModal')">إلغاء</button>
+      <button class="btn" onclick="saveInventory()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-overlay" id="supModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🚛 بيانات المورد</span>
+      <button class="modal-close" onclick="closeModal('supModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sup-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">اسم المورد *</label><input class="form-control" id="sup-name"></div>
+        <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-control" id="sup-phone"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">التخصص</label><input class="form-control" id="sup-spec" placeholder="فلاتر، فرامل..."></div>
+        <div class="form-group"><label class="form-label">العنوان</label><input class="form-control" id="sup-addr"></div>
+      </div>
+      <div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-control" id="sup-notes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('supModal')">إلغاء</button>
+      <button class="btn" onclick="saveSupplier()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <span class="modal-title">🧾 وصل البيع</span>
+      <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    </div>
+    <div class="modal-body" id="receiptContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('receiptModal')">إغلاق</button>
+      <button class="btn" onclick="window.print()">🖨️ طباعة</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/db.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/sell.js"></script>
+<script src="js/inventory.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/suppliers.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
